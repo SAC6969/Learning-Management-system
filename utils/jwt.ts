@@ -11,31 +11,31 @@ interface ITokenOptions {
     secure?: boolean;
 }
 
+// parse environmet variables
+const accessTokenExpired = parseInt(process.env.ACCESS_TOKEN_EXPIRE || '300', 10);
+const refreshTokenExpired = parseInt(process.env.REFRESH_TOKEN_EXPIRE || '300', 10);
+
+// options for cookies
+export const accessTokenOptions: ITokenOptions = {
+    expires: new Date(Date.now() + accessTokenExpired * 60 * 60 * 1000),
+    maxAge: accessTokenExpired * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: 'lax',
+}
+
+export const refreshTokenOptions: ITokenOptions = {
+    expires: new Date(Date.now() + refreshTokenExpired * 24 * 60 * 60 * 1000),
+    maxAge: refreshTokenExpired * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: 'lax',
+}
+
 export const sendToken = (user: IUSer, statusCode: number, res: Response) => {
     const accessToken = user.SignAccessToken();
     const refreshToken = user.SignRefreshToken();
 
     // upload session to redis
-    redis.set(user._id,JSON.stringify(user) as any);
-
-    // parse environmet variables
-    const accessTokenExpired = parseInt(process.env.ACCESS_TOKEN_EXPIRE || '300', 10);
-    const refreshTokenExpired = parseInt(process.env.REFRESH_TOKEN_EXPIRE || '300', 10);
-
-    // options for cookies
-    const accessTokenOptions: ITokenOptions = {
-        expires: new Date(Date.now() + accessTokenExpired * 100),
-        maxAge: accessTokenExpired * 1000,
-        httpOnly: true,
-        sameSite: 'lax',
-    }
-
-    const refreshTokenOptions: ITokenOptions = {
-        expires: new Date(Date.now() + refreshTokenExpired * 100),
-        maxAge: refreshTokenExpired * 1000,
-        httpOnly: true,
-        sameSite: 'lax',
-    }
+    redis.set(user._id, JSON.stringify(user) as any);
 
     // only set secure to true
     if (process.env.NODE_ENV === 'production') {
